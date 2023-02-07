@@ -4,7 +4,11 @@ services:
     build:
       context: ./frontend
       dockerfile: ./Dockerfile
-    command: gunicorn frontend.main:app -b "0.0.0.0:8051" --reload
+    command: bash -c " 
+      sleep 3;
+      gunicorn frontend.main:app -b "0.0.0.0:8051" --reload
+      "
+
     environment:
       DASH_DEBUG: true
       DASH_HOT_RELOAD: true

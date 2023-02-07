@@ -25,6 +25,10 @@ class ORMBase(BaseModel):
         orm_mode = True
 
 
+class User(ORMBase):
+    name: str
+
+
 class Image(ORMBase):
     name: str
     hashid: str

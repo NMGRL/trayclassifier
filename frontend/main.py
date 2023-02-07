@@ -35,9 +35,21 @@ cols = [{'name': 'Label', 'id': 'label'},
 cols_scoreboard_table = [{'name': 'Name', 'id': 'name'},
                          {'name': 'TotalClassified', 'id': 'total'}]
 
+baseurl = 'http://api:8000'
+
+resp = requests.get(f'{baseurl}/users')
+users = resp.json()
+
+
 dash_app.layout = dbc.Container([dbc.Row(
     [html.H4('User', style={'display': 'inline-block', 'margin-right': 20}),
-     dcc.Input(id='username', type='text', placeholder='', style={'display': 'inline-block'})]),
+     dcc.Input(id='username', type='text', placeholder='',
+               list='available_users',
+               style={'display': 'inline-block'}),
+     html.Datalist(
+         id='available_users',
+         children=[html.Option(value=word['name']) for word in users])
+     ]),
     dbc.Row(dbc.ButtonGroup([dbc.Button('Next Image',
                                         id='next_image_btn'),
                              dbc.Button('Good',
@@ -89,7 +101,6 @@ dash_app.layout = dbc.Container([dbc.Row(
                    )
 def handle_image(n_clicks, good_n_clicks, bad_n_clicks, empty_n_clicks, multigrain_n_clicks,
                  contaminant_n_clicks, blurry_n_clicks, current_image_id, username):
-    baseurl = 'http://api:8000'
     if ctx.triggered_id in ('good_btn', 'empty_btn',
                             'bad_btn', 'multigrain_btn',
                             'contaminant_btn', 'blurry_btn'):

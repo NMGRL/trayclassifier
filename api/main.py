@@ -109,6 +109,11 @@ async def add_label(image_id: str, label: str = 'good', user: str = 'default', d
     db.commit()
 
 
+@app.get('/users', response_model=List[schemas.User])
+async def get_users(db: Session = Depends(get_db)):
+    return db.query(User).all()
+
+
 @app.get('/scoreboard')
 async def get_scoreboard(user: str = None, db: Session = Depends(get_db)):
     q = db.query(Labels.user_id, func.count(Labels.user_id))
