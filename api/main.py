@@ -68,14 +68,14 @@ setup_db()
 
 @app.post('/unclassified_image')
 async def add_unclassified_image(payload, db: Session = Depends(get_db)):
-    bb = io.BytesIO()
+    # bb = io.BytesIO()
 
     img = payload['image']
     name = payload['name']
 
-    img.save(bb, format='tiff')
-    buf = bb.getvalue()
-    ha = hashlib.sha256(buf).hexdigest()
+    # img.save(bb, format='tiff')
+    # buf = bb.getvalue()
+    ha = hashlib.sha256(img).hexdigest()
 
     q = db.query(Image)
     try:
@@ -85,7 +85,7 @@ async def add_unclassified_image(payload, db: Session = Depends(get_db)):
     except NoResultFound:
         pass
 
-    dbim = Image(blob=buf, name=name, hashid=ha)
+    dbim = Image(blob=img, name=name, hashid=ha)
     db.add(dbim)
     db.commit()
 
