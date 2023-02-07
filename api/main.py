@@ -13,16 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ===============================================================================
+import json
 from typing import List
 
 from fastapi import FastAPI, Depends, HTTPException, APIRouter, Response
 
+from sqlalchemy import func
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import JSONResponse
 
 from api import schemas
 from api.db import setup_db
-from api.models import Label, Image, Labels
+from api.models import Label, Image, Labels, User
 from api.session import get_db
 
 # tags_metadata = [
@@ -61,14 +65,34 @@ setup_db()
 
 
 @app.post('/label/{image_id}')
-async def add_label(image_id: str, label: str = 'good', db: Session = Depends(get_db)):
+async def add_label(image_id: str, label: str = 'good', user: str = 'default', db: Session = Depends(get_db)):
     q = db.query(Image)
     image = q.filter(Image.id == image_id).first()
 
     label = db.query(Label).filter(Label.name == label).first()
-    label = Labels(label=label, image=image)
+    try:
+        user = db.query(User).filter(User.name == user).first()
+    except NoResultFound:
+        user = User(name=user)
+        db.add(user)
+
+    label = Labels(label=label, image=image, user=user)
     db.add(label)
     db.commit()
+
+
+@app.get('/results_report')
+async def get_result_report(db: Session = Depends(get_db)):
+    records = db.query(Labels.label_id,
+                       func.count(Labels.label_id)).group_by(Labels.label_id).all()
+    rows = [{'label': db.query(Label).filter(Label.id == l).first().name, 'count': c} for l, c in records]
+    total = db.query(Image).count()
+    classified = db.query(Labels.image_id).group_by(Labels.image_id).count()
+
+    obj = {'table': rows,
+           'total': total,
+           'unclassified': total - classified}
+    return JSONResponse(content=obj)
 
 
 @app.get('/labels', response_model=List[schemas.Label])
@@ -85,7 +109,9 @@ async def get_image_info(image_id: int = None, hashid: str = None, db: Session =
     elif image_id:
         q = q.filter(Image.id > image_id)
     else:
-        pass
+        q = q.outerjoin(Labels)
+        q = q.filter(Labels.id == None)
+        q = q.order_by(Image.id.asc())
 
     return q.first()
 

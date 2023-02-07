@@ -42,6 +42,10 @@ class Base:
         return cls.__name__
 
 
+class User(Base):
+    name = Column(String)
+
+
 class Label(Base):
     name = Column(String)
 
@@ -49,8 +53,10 @@ class Label(Base):
 class Labels(Base):
     image_id = Column(Integer, ForeignKey('Image.id'))
     label_id = Column(Integer, ForeignKey('Label.id'))
+    user_id = Column(Integer, ForeignKey('User.id'))
 
     image = relationship('Image', uselist=False)
+    user = relationship('User', uselist=False)
     label = relationship('Label', uselist=False)
 
 

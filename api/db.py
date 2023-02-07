@@ -14,9 +14,10 @@
 # limitations under the License.
 # ===============================================================================
 import hashlib
+import io
 import os
 
-from api.models import Base, Label, Image
+from api.models import Base, Label, Image, Labels
 from api.session import get_db, engine
 from sqlalchemy.exc import NoResultFound
 from PIL import Image as PILImage, UnidentifiedImageError
@@ -48,16 +49,24 @@ def setup_db():
         for f in os.listdir(root):
 
             p = os.path.join(root, f)
-            # try:
-            #     img = PILImage.open(p)
-            # except UnidentifiedImageError:
-            #     continue
+            try:
+                img = PILImage.open(p)
+                width, height = img.size
+                left = 100
+                right = width - left
+                bottom = 100
+                top = height - bottom
+                img = img.crop((left, bottom, right, top))
+            except UnidentifiedImageError:
+                continue
             #
             # ha = array(img.convert('L')).flatten().tobytes()
 
-            with open(p, 'rb') as rfile:
-                buf = rfile.read()
-
+            # with open(p, 'rb') as rfile:
+            #     buf = rfile.read()
+            bb = io.BytesIO()
+            img.save(bb, format='tiff')
+            buf = bb.getvalue()
             ha = hashlib.sha256(buf).hexdigest()
 
             q = sess.query(Image)
@@ -70,6 +79,9 @@ def setup_db():
 
             dbim = Image(blob=buf, name=p, hashid=ha)
             sess.add(dbim)
+            if tag == 'blurry':
+                l = Labels(image=dbim, label_id=6)
+                sess.add(l)
             sess.commit()
             # d.add_labeled_sample(p, array(img), tag)
 
