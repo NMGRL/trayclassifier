@@ -54,47 +54,48 @@ def setup_db():
     for l in ('good', 'bad', 'empty', 'multigrain', 'contaminant', 'blurry'):
         add_label(sess, l)
 
+    load_pics = True
+    if load_pics:
+        for tag in ('blurry', 'empty'):
+            root = f'./data/421{tag}'
+            for f in os.listdir(root):
 
-    for tag in ('blurry', 'empty'):
-        root = f'./data/421{tag}'
-        for f in os.listdir(root):
+                p = os.path.join(root, f)
+                try:
+                    img = PILImage.open(p)
+                    width, height = img.size
+                    left = 100
+                    right = width - left
+                    bottom = 100
+                    top = height - bottom
+                    img = img.crop((left, bottom, right, top))
+                except UnidentifiedImageError:
+                    continue
+                #
+                # ha = array(img.convert('L')).flatten().tobytes()
 
-            p = os.path.join(root, f)
-            try:
-                img = PILImage.open(p)
-                width, height = img.size
-                left = 100
-                right = width - left
-                bottom = 100
-                top = height - bottom
-                img = img.crop((left, bottom, right, top))
-            except UnidentifiedImageError:
-                continue
-            #
-            # ha = array(img.convert('L')).flatten().tobytes()
+                # with open(p, 'rb') as rfile:
+                #     buf = rfile.read()
+                bb = io.BytesIO()
+                img.save(bb, format='tiff')
+                buf = bb.getvalue()
+                ha = hashlib.sha256(buf).hexdigest()
 
-            # with open(p, 'rb') as rfile:
-            #     buf = rfile.read()
-            bb = io.BytesIO()
-            img.save(bb, format='tiff')
-            buf = bb.getvalue()
-            ha = hashlib.sha256(buf).hexdigest()
+                q = sess.query(Image)
+                try:
+                    q = q.filter(Image.hashid == ha)
+                    q.one()
+                    continue
+                except NoResultFound:
+                    pass
 
-            q = sess.query(Image)
-            try:
-                q = q.filter(Image.hashid == ha)
-                q.one()
-                continue
-            except NoResultFound:
-                pass
-
-            dbim = Image(blob=buf, name=p, hashid=ha)
-            sess.add(dbim)
-            if tag == 'blurry':
-                l = Labels(image=dbim, label_id=6, user_id=1)
-                sess.add(l)
-            sess.commit()
-            # d.add_labeled_sample(p, array(img), tag)
+                dbim = Image(blob=buf, name=p, hashid=ha)
+                sess.add(dbim)
+                if tag == 'blurry':
+                    l = Labels(image=dbim, label_id=6, user_id=1)
+                    sess.add(l)
+                sess.commit()
+                # d.add_labeled_sample(p, array(img), tag)
 
     sess.close()
 # ============= EOF =============================================

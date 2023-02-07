@@ -20,7 +20,7 @@ from pydantic import BaseModel
 
 class UnclassifiedImage(BaseModel):
     name: str
-    image: bytes
+    image: str
 
 
 class ORMBase(BaseModel):

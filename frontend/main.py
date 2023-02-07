@@ -128,21 +128,27 @@ def handle_image(n_clicks, good_n_clicks, bad_n_clicks, empty_n_clicks, multigra
 
     resp = requests.get(url)
     obj = resp.json()
-    hid = obj['hashid']
-    resp = requests.get(f'{baseurl}/unclassified_image?hashid={hid}')
+    graph = dcc.Graph()
+    image_info = ''
+    image_id = 0
+    if obj:
+        image_id = obj['id']
+        hid = obj['hashid']
+        resp = requests.get(f'{baseurl}/unclassified_image?hashid={hid}')
     # print(resp, resp.text)
-    img = Image.open(io.BytesIO(resp.content))
-    fig = px.imshow(array(img),
-                    # color_continuous_scale='gray'
-                    )
-    fig.update_layout(coloraxis_showscale=False,
-                      # margin=dict(l=20, r=20, t=20, b=20),
-                      height=800)
-    fig.update_xaxes(showticklabels=False)
-    fig.update_yaxes(showticklabels=False)
+        img = Image.open(io.BytesIO(resp.content))
+        fig = px.imshow(array(img),
+                        # color_continuous_scale='gray'
+                        )
+        fig.update_layout(coloraxis_showscale=False,
+                          # margin=dict(l=20, r=20, t=20, b=20),
+                          height=800)
+        fig.update_xaxes(showticklabels=False)
+        fig.update_yaxes(showticklabels=False)
+        graph.figure = fig
+        image_info = f"{obj['name']}"
 
-    image_info = f"{obj['name']}"
-    return dcc.Graph(figure=fig), obj['id'], \
+    return graph, image_id, \
            tabledata, results_info, image_info, scoreboard_tabledata
 
 

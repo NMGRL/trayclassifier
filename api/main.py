@@ -13,10 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ===============================================================================
+import base64
 import hashlib
 import io
 import json
-from typing import List
+from typing import List, Optional
 
 from fastapi import FastAPI, Depends, HTTPException, APIRouter, Response
 
@@ -66,11 +67,10 @@ app.add_middleware(
 setup_db()
 
 
-@app.post('/unclassified_image')
+@app.post('/add_unclassified_image')
 async def add_unclassified_image(payload: schemas.UnclassifiedImage, db: Session = Depends(get_db)):
-    # bb = io.BytesIO()
 
-    img = payload.image
+    img = base64.b64decode(payload.image.encode())
     name = payload.name
 
     # img.save(bb, format='tiff')
@@ -169,7 +169,7 @@ async def get_labels(db: Session = Depends(get_db)):
     return q.all()
 
 
-@app.get('/unclassified_image_info', response_model=schemas.ImageInfo)
+@app.get('/unclassified_image_info', response_model=Optional[schemas.ImageInfo])
 async def get_image_info(image_id: int = None, hashid: str = None, db: Session = Depends(get_db)):
     q = db.query(Image)
     if hashid:
@@ -181,6 +181,7 @@ async def get_image_info(image_id: int = None, hashid: str = None, db: Session =
         q = q.filter(Labels.id == None)
         q = q.order_by(Image.id.asc())
 
+    # img = q.first()
     return q.first()
 
 
