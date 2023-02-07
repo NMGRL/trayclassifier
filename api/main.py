@@ -68,17 +68,47 @@ setup_db()
 async def add_label(image_id: str, label: str = 'good', user: str = 'default', db: Session = Depends(get_db)):
     q = db.query(Image)
     image = q.filter(Image.id == image_id).first()
-
+    print('adddiasd', user)
     label = db.query(Label).filter(Label.name == label).first()
     try:
-        user = db.query(User).filter(User.name == user).first()
+        user = db.query(User).filter(User.name == user).one()
     except NoResultFound:
+        print('no user found', user)
         user = User(name=user)
         db.add(user)
+        db.commit()
 
     label = Labels(label=label, image=image, user=user)
     db.add(label)
     db.commit()
+
+
+@app.get('/scoreboard')
+async def get_scoreboard(user: str = None, db: Session = Depends(get_db)):
+    q = db.query(Labels.user_id, func.count(Labels.user_id))
+
+    # if user:
+    # try:
+    #     user = db.query(User).filter(User.name == user).first()
+    #     records = q.filter(Labels.user == user).group_by(Labels.user_id).all()
+    # except NoResultFound:
+    #     pass
+    # else:
+    q = q.group_by(Labels.user_id)
+    records = q.all()
+
+    rows = [{'name': db.query(User).filter(User.id == u).first().name, 'total': c} for u, c in records]
+
+    rows = sorted(rows, key=lambda x: x['total'], reverse=True)
+
+    if user:
+        idx = next((i for i, r in enumerate(rows) if r['name'] == user))
+        row = rows.pop(idx)
+        rows.insert(0, row)
+
+    obj = {'table': rows}
+    print(obj)
+    return JSONResponse(content=obj)
 
 
 @app.get('/results_report')

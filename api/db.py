@@ -17,7 +17,7 @@ import hashlib
 import io
 import os
 
-from api.models import Base, Label, Image, Labels
+from api.models import Base, Label, Image, Labels, User
 from api.session import get_db, engine
 from sqlalchemy.exc import NoResultFound
 from PIL import Image as PILImage, UnidentifiedImageError
@@ -37,12 +37,23 @@ def add_label(s, l):
         s.commit()
 
 
+def add_default_user(s):
+    try:
+        record = s.query(User).filter(User.name == 'default').one()
+    except NoResultFound:
+        u = User(name='default')
+        s.add(u)
+        s.commit()
+
+
 def setup_db():
     Base.metadata.create_all(bind=engine)
 
     sess = next(get_db())
+    add_default_user(sess)
     for l in ('good', 'bad', 'empty', 'multigrain', 'contaminant', 'blurry'):
         add_label(sess, l)
+
 
     for tag in ('blurry', 'empty'):
         root = f'./data/421{tag}'
@@ -80,7 +91,7 @@ def setup_db():
             dbim = Image(blob=buf, name=p, hashid=ha)
             sess.add(dbim)
             if tag == 'blurry':
-                l = Labels(image=dbim, label_id=6)
+                l = Labels(image=dbim, label_id=6, user_id=1)
                 sess.add(l)
             sess.commit()
             # d.add_labeled_sample(p, array(img), tag)

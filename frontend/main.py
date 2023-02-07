@@ -32,6 +32,8 @@ dash_app = Dash(
 
 cols = [{'name': 'Label', 'id': 'label'},
         {'name': 'Count', 'id': 'count'}]
+cols_scoreboard_table = [{'name': 'Name', 'id': 'name'},
+                         {'name': 'TotalClassified', 'id': 'total'}]
 
 dash_app.layout = dbc.Container([dbc.Row(
     [html.H4('User', style={'display': 'inline-block', 'margin-right': 20}),
@@ -58,7 +60,10 @@ dash_app.layout = dbc.Container([dbc.Row(
              dbc.Col([html.H2('Results'),
                       DataTable(columns=cols,
                                 id='results_table'),
-                      html.Div(id='results_info')
+                      html.Div(id='results_info'),
+                      html.H2('Scoreboard'),
+                      DataTable(columns=cols_scoreboard_table,
+                                id='scoreboard_table')
                       ]
                      )
              ]),
@@ -70,6 +75,7 @@ dash_app.layout = dbc.Container([dbc.Row(
                     Output('results_table', 'data'),
                     Output('results_info', 'children'),
                     Output('image_info', 'children'),
+                    Output('scoreboard_table', 'data'),
                     ],
                    [Input('next_image_btn', 'n_clicks'),
                     Input('good_btn', 'n_clicks'),
@@ -98,6 +104,12 @@ def handle_image(n_clicks, good_n_clicks, bad_n_clicks, empty_n_clicks, multigra
     report = resp.json()
     tabledata = report['table']
 
+    url = f'{baseurl}/scoreboard'
+    if username:
+        url = f'{url}?user={username}'
+    resp = requests.get(url)
+    scoreboard_tabledata = resp.json()['table']
+
     results_info = f"Total={report['total']} Unclassified={report['unclassified']}"
     url = f'{baseurl}/unclassified_image_info'
     if current_image_id:
@@ -120,7 +132,7 @@ def handle_image(n_clicks, good_n_clicks, bad_n_clicks, empty_n_clicks, multigra
 
     image_info = f"{obj['name']}"
     return dcc.Graph(figure=fig), obj['id'], \
-           tabledata, results_info, image_info
+           tabledata, results_info, image_info, scoreboard_tabledata
 
 
 app = dash_app.server
