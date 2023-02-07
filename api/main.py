@@ -67,11 +67,11 @@ setup_db()
 
 
 @app.post('/unclassified_image')
-async def add_unclassified_image(payload, db: Session = Depends(get_db)):
+async def add_unclassified_image(payload: schemas.UnclassifiedImage, db: Session = Depends(get_db)):
     # bb = io.BytesIO()
 
-    img = payload['image']
-    name = payload['name']
+    img = payload.image
+    name = payload.name
 
     # img.save(bb, format='tiff')
     # buf = bb.getvalue()

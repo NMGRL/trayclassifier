@@ -18,6 +18,11 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+class UnclassifiedImage(BaseModel):
+    name: str
+    image: bytes
+
+
 class ORMBase(BaseModel):
     id: Optional[int] = None
 
