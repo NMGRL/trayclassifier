@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ===============================================================================
+import hashlib
+import io
 import json
 from typing import List
 
@@ -64,6 +66,30 @@ app.add_middleware(
 setup_db()
 
 
+@app.post('/unclassified_image')
+async def add_unclassified_image(payload, db: Session = Depends(get_db)):
+    bb = io.BytesIO()
+
+    img = payload['image']
+    name = payload['name']
+
+    img.save(bb, format='tiff')
+    buf = bb.getvalue()
+    ha = hashlib.sha256(buf).hexdigest()
+
+    q = db.query(Image)
+    try:
+        q = q.filter(Image.hashid == ha)
+        q.one()
+        return
+    except NoResultFound:
+        pass
+
+    dbim = Image(blob=buf, name=name, hashid=ha)
+    db.add(dbim)
+    db.commit()
+
+
 @app.post('/label/{image_id}')
 async def add_label(image_id: str, label: str = 'good', user: str = 'default', db: Session = Depends(get_db)):
     q = db.query(Image)
@@ -86,14 +112,6 @@ async def add_label(image_id: str, label: str = 'good', user: str = 'default', d
 @app.get('/scoreboard')
 async def get_scoreboard(user: str = None, db: Session = Depends(get_db)):
     q = db.query(Labels.user_id, func.count(Labels.user_id))
-
-    # if user:
-    # try:
-    #     user = db.query(User).filter(User.name == user).first()
-    #     records = q.filter(Labels.user == user).group_by(Labels.user_id).all()
-    # except NoResultFound:
-    #     pass
-    # else:
     q = q.group_by(Labels.user_id)
     records = q.all()
 
@@ -107,15 +125,30 @@ async def get_scoreboard(user: str = None, db: Session = Depends(get_db)):
         rows.insert(0, row)
 
     obj = {'table': rows}
-    print(obj)
+    return JSONResponse(content=obj)
+
+
+def get_users_report(db, user):
+    q = db.query(Labels.label_id,
+                 func.count(Labels.label_id)).join(User)
+
+    if user:
+        q = q.filter(User.name == user)
+    records = q.group_by(Labels.label_id).all()
+    rows = [{'label': db.query(Label).filter(Label.id == l).first().name, 'count': c} for l, c in records]
+    return rows
+
+
+@app.get('/user_report/{user}')
+async def get_user_report(user: str, db: Session = Depends(get_db)):
+    rows = get_users_report(db, user)
+    obj = {'table': rows}
     return JSONResponse(content=obj)
 
 
 @app.get('/results_report')
 async def get_result_report(db: Session = Depends(get_db)):
-    records = db.query(Labels.label_id,
-                       func.count(Labels.label_id)).group_by(Labels.label_id).all()
-    rows = [{'label': db.query(Label).filter(Label.id == l).first().name, 'count': c} for l, c in records]
+    rows = get_users_report(db, None)
     total = db.query(Image).count()
     classified = db.query(Labels.image_id).group_by(Labels.image_id).count()
 
