@@ -1,0 +1,9 @@
+dash==2.8.0
+gunicorn
+plotly
+pandas
+dash_bootstrap_components
+dash_renderjson
+requests
+pillow
+numpy
