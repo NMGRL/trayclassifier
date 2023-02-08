@@ -109,9 +109,16 @@ async def add_label(image_id: str, label: str = 'good', user: str = 'default', d
 
 @app.get('/representative_images')
 def get_representative_images(db: Session = Depends(get_db)):
-    subquery = db.query(Labels.id).order_by(Labels.label_id).distinct(Labels.label_id).subquery()
-    q = db.query(Labels).filter(Labels.id.in_(select(subquery)))
+    # subquery = db.query(Labels.id).order_by(Labels.label_id).distinct(Labels.label_id).subquery()
+    # q = db.query(Labels).filter(Labels.id.in_(select(subquery)))
+    subquery = db.query(Labels.id).distinct(Labels.label_id).order_by(Labels.label_id, Labels.id).subquery()
 
+    q = db.query(Labels).filter(Labels.id.in_(select(subquery))).order_by(Labels.id)
+
+
+    records = q.all()
+    for r in records:
+        print(r.id)
     obj = [{'label': i.label.name,
             'name': i.image.name,
             'image': base64.b64encode(i.image.blob).decode()} for i in q.all()]
