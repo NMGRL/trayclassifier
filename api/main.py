@@ -111,7 +111,7 @@ async def add_label(image_id: str, label: str = 'good', user: str = 'default', d
 def get_representative_images(db: Session = Depends(get_db)):
     # subquery = db.query(Labels.id).order_by(Labels.label_id).distinct(Labels.label_id).subquery()
     # q = db.query(Labels).filter(Labels.id.in_(select(subquery)))
-    subquery = db.query(Labels.id).distinct(Labels.label_id).order_by(Labels.label_id, Labels.id).subquery()
+    subquery = db.query(Labels.id).distinct(Labels.label_id).order_by(Labels.label_id.desc(), Labels.id.desc()).subquery()
 
     q = db.query(Labels).filter(Labels.id.in_(select(subquery))).order_by(Labels.id)
 
