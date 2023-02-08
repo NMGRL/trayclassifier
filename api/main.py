@@ -21,7 +21,7 @@ from typing import List, Optional
 
 from fastapi import FastAPI, Depends, HTTPException, APIRouter, Response
 
-from sqlalchemy import func
+from sqlalchemy import func, distinct
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
@@ -69,7 +69,6 @@ setup_db()
 
 @app.post('/add_unclassified_image')
 async def add_unclassified_image(payload: schemas.UnclassifiedImage, db: Session = Depends(get_db)):
-
     img = base64.b64decode(payload.image.encode())
     name = payload.name
 
@@ -94,7 +93,6 @@ async def add_unclassified_image(payload: schemas.UnclassifiedImage, db: Session
 async def add_label(image_id: str, label: str = 'good', user: str = 'default', db: Session = Depends(get_db)):
     q = db.query(Image)
     image = q.filter(Image.id == image_id).first()
-    print('adddiasd', user)
     label = db.query(Label).filter(Label.name == label).first()
     try:
         user = db.query(User).filter(User.name == user).one()
@@ -107,6 +105,16 @@ async def add_label(image_id: str, label: str = 'good', user: str = 'default', d
     label = Labels(label=label, image=image, user=user)
     db.add(label)
     db.commit()
+
+
+@app.get('/representative_images')
+def get_representative_images(db: Session = Depends(get_db)):
+    q = db.query(Labels).distinct(Labels.label_id)
+
+    obj = [{'label': i.label.name,
+            'name': i.image.name,
+            'image': base64.b64encode(i.image.blob).decode()} for i in q.all()]
+    return JSONResponse(content=obj)
 
 
 @app.get('/users', response_model=List[schemas.User])
