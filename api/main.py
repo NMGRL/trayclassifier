@@ -109,7 +109,7 @@ async def add_label(image_id: str, label: str = 'good', user: str = 'default', d
 
 @app.get('/representative_images')
 def get_representative_images(db: Session = Depends(get_db)):
-    q = db.query(Labels).distinct(Labels.label_id)
+    q = db.query(Labels).distinct(Labels.label_id).order_by(Labels.id)
 
     obj = [{'label': i.label.name,
             'name': i.image.name,
