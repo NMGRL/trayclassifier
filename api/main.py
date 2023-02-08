@@ -21,7 +21,7 @@ from typing import List, Optional
 
 from fastapi import FastAPI, Depends, HTTPException, APIRouter, Response
 
-from sqlalchemy import func, distinct
+from sqlalchemy import func, distinct, select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
@@ -109,7 +109,8 @@ async def add_label(image_id: str, label: str = 'good', user: str = 'default', d
 
 @app.get('/representative_images')
 def get_representative_images(db: Session = Depends(get_db)):
-    q = db.query(Labels).distinct(Labels.label_id).order_by(Labels.id)
+    subquery = db.query(Labels.id).order_by(Labels.label_id).distinct(Labels.label_id).subquery()
+    q = db.query(Labels).filter(Labels.id.in_(select(subquery)))
 
     obj = [{'label': i.label.name,
             'name': i.image.name,
