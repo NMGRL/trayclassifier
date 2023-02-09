@@ -16,6 +16,7 @@
 import base64
 import io
 import pprint
+import random
 
 from dash import Dash, Input, Output, html, dcc, State, ctx
 from dash.dash_table import DataTable
@@ -43,7 +44,7 @@ baseurl = 'http://api:8000'
 
 resp = requests.get(f'{baseurl}/users')
 users = resp.json()
-LABELS = ('good', 'bad', 'empty', 'multigrain', 'contaminant', 'blurry')
+LABELS = ('good', 'empty', 'multigrain', 'contaminant', 'blurry')
 
 
 def make_table(cols, tid):
@@ -63,18 +64,19 @@ def make_example_col(label):
                                         ),
                              style={'display': 'block',
                                     'margin-top': '10px',
-                                    'margin-bottom': '10px'}
+                                    'margin-bottom': '10px',
+                                    }
                              ),
-                    html.Div(id=f'{label}_graph')
-                    ])
+                    html.Div(id=f'{label}_graph')],
+                   width=2)
 
 
 def make_example_row():
     cols = [make_example_col(label) for label in LABELS]
-    return dbc.Row(cols)
+    return dbc.Row(cols, className='justify-content-center')
 
 
-dash_app.layout = dbc.Container([
+dash_app.layout = html.Div(dbc.Container([
     dcc.ConfirmDialog(
         id='confirm-danger',
         message='Please enter a Username',
@@ -106,9 +108,22 @@ dash_app.layout = dbc.Container([
     #                                     id='blurry_btn'),
     #                          ])),
     make_example_row(),
+    dbc.Row(dbc.Col(dbc.Button('Skip', id='skip_btn',
+                               style={'margin-left': 'auto',
+                                      'margin-right': 'auto',
+                                      'margin-top': '10px',
+                                      'margin-bottom': '10px',
+                                      'display': 'block'}
+                               ),
+                    width=2),
+            className='justify-content-center'),
     dbc.Row([dbc.Col([html.Div(id='image_id',
                                style='display: none'),
-                      # html.Div(id='image_info'),
+                      html.Div(id='label_guess',
+                               style={'border-style': 'solid',
+                                      'border-radius': '5px',
+                                      'margin': '10px'
+                                      }),
                       html.Div(id="image"), ]),
              dbc.Col([
                  html.H2('Image'),
@@ -120,11 +135,10 @@ dash_app.layout = dbc.Container([
                  html.Div(id='results_info'),
                  html.H2('Scoreboard'),
                  make_table(cols_scoreboard_table,
-                            'scoreboard_table')
-             ]
-             )
-             ]),
-])
+                            'scoreboard_table')])
+             ])]),
+    style={'backgroundColor': '#e3cc9e'}
+)
 
 graph_config = {'responsive': False, "displayModeBar": False, "displaylogo": False}
 
@@ -144,7 +158,6 @@ def make_example_graphs():
                 break
         else:
             imgs.append(None)
-            # ns.append(l)
 
     gs = []
     for im in imgs:
@@ -153,8 +166,9 @@ def make_example_graphs():
 
         fig = px.imshow(im)
         fig.update_layout(coloraxis_showscale=False,
+                          paper_bgcolor='#e3cc9e',
                           margin=dict(l=0, r=0, t=0, b=0),
-                          height=100)
+                          height=150)
         fig.update_xaxes(showticklabels=False)
         fig.update_yaxes(showticklabels=False)
         fig.update_traces(hoverinfo='skip')
@@ -208,6 +222,11 @@ def make_image_table(obj):
     return data
 
 
+def make_label_guess(im):
+    # class image using a prebuilt classifier
+    return random.choice(LABELS)
+
+
 @dash_app.callback([Output('image', 'children'),
                     Output('image_id', 'children'),
                     Output('results_table', 'data'),
@@ -215,17 +234,17 @@ def make_image_table(obj):
                     # Output('image_info', 'children'),
                     Output('scoreboard_table', 'data'),
                     Output('good_graph', 'children'),
-                    Output('bad_graph', 'children'),
                     Output('empty_graph', 'children'),
                     Output('multigrain_graph', 'children'),
                     Output('contaminant_graph', 'children'),
                     Output('blurry_graph', 'children'),
                     Output('image_table', 'data'),
                     Output('confirm-danger', 'displayed'),
+                    Output('label_guess', 'children')
                     ],
                    [
                        Input('good_btn', 'n_clicks'),
-                       Input('bad_btn', 'n_clicks'),
+                       Input('skip_btn', 'n_clicks'),
                        Input('empty_btn', 'n_clicks'),
                        Input('multigrain_btn', 'n_clicks'),
                        Input('contaminant_btn', 'n_clicks'),
@@ -236,12 +255,12 @@ def make_image_table(obj):
                        State('image_table', 'data'),
                    ],
                    )
-def handle_image(good_n_clicks, bad_n_clicks, empty_n_clicks, multigrain_n_clicks,
+def handle_image(good_n_clicks, skip_n_clicks, empty_n_clicks, multigrain_n_clicks,
                  contaminant_n_clicks, blurry_n_clicks, current_image_id, username,
                  efig, image_tabledata):
     display_confirm = False
     if ctx.triggered_id in ('good_btn', 'empty_btn',
-                            'bad_btn', 'multigrain_btn',
+                            'multigrain_btn',
                             'contaminant_btn', 'blurry_btn'):
         display_confirm = True
         if current_image_id:
@@ -277,34 +296,39 @@ def handle_image(good_n_clicks, bad_n_clicks, empty_n_clicks, multigrain_n_click
     graph = dcc.Graph(config=graph_config)
     # image_info = ''
     image_id = 0
+
+    label_guess = '---'
     if obj:
         image_id = obj['id']
         hid = obj['hashid']
         resp = requests.get(f'{baseurl}/unclassified_image?hashid={hid}')
         # print(resp, resp.text)
         img = Image.open(io.BytesIO(resp.content))
-        fig = px.imshow(array(img),
+        img = array(img)
+        fig = px.imshow(img,
                         # color_continuous_scale='gray'
                         )
 
         fig.update_layout(coloraxis_showscale=False,
+                          paper_bgcolor='#e3cc9e',
                           # margin=dict(l=20, r=20, t=20, b=20),
                           margin=dict(l=0, r=0, t=0, b=0),
-                          height=800)
+                          height=550)
         fig.update_xaxes(showticklabels=False)
         fig.update_yaxes(showticklabels=False)
         graph.figure = fig
         image_table = make_image_table(obj)
+        label_guess = make_label_guess(img)
     else:
         graph = efig
         image_table = image_tabledata
 
-    good_graph, bad_graph, empty_graph, multigrain_graph, contaminant_graph, blurry_graph = make_example_graphs()
+    good_graph, empty_graph, multigrain_graph, contaminant_graph, blurry_graph = make_example_graphs()
 
     return graph, image_id, \
            tabledata, results_info, scoreboard_tabledata, \
-           good_graph, bad_graph, empty_graph, multigrain_graph, contaminant_graph, blurry_graph, \
-           image_table, display_confirm
+           good_graph, empty_graph, multigrain_graph, contaminant_graph, blurry_graph, \
+           image_table, display_confirm, label_guess
 
 
 app = dash_app.server
