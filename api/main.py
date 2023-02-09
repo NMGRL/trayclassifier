@@ -82,7 +82,7 @@ async def add_unclassified_image(payload: schemas.UnclassifiedImage, db: Session
     except NoResultFound:
         pass
 
-    payloadargs = payload.dict(exclude=['image'])
+    payloadargs = payload.dict(exclude={'image',})
 
     dbim = Image(blob=img, hashid=ha, **payloadargs)
     db.add(dbim)
