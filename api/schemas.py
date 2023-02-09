@@ -23,14 +23,14 @@ class UnclassifiedImage(BaseModel):
     hole_id: int
     image: str
 
-    loadname: str = ''
-    project: str = ''
-    sample: str = ''
-    material: str = ''
-    identifier: str = ''
-    weight: float = ''
-    note: str = ''
-    nxtals: int = ''
+    loadname: str = None
+    project: str = None
+    sample: str = None
+    material: str = None
+    identifier: str = None
+    weight: float = None
+    note: str = None
+    nxtals: int = None
 
 
 class ORMBase(BaseModel):
