@@ -19,18 +19,18 @@ from pydantic import BaseModel
 
 
 class UnclassifiedImage(BaseModel):
-    loadname: str
     trayname: str
     hole_id: int
-    project: str
-    sample: str
-    material: str
-    identifier: str
-    weight: float
-    note: str
-    nxtals: int
-
     image: str
+
+    loadname: str = ''
+    project: str = ''
+    sample: str = ''
+    material: str = ''
+    identifier: str = ''
+    weight: float = ''
+    note: str = ''
+    nxtals: int = ''
 
 
 class ORMBase(BaseModel):
