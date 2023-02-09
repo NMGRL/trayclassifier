@@ -19,7 +19,13 @@ from pydantic import BaseModel
 
 
 class UnclassifiedImage(BaseModel):
-    name: str
+    loadname: str
+    trayname: str
+    hole_id: int
+    sample: str
+    material: str
+    identifier: str
+
     image: str
 
 
@@ -41,7 +47,9 @@ class Image(ORMBase):
 
 
 class ImageInfo(ORMBase):
-    name: str
+    hole_id: int
+    loadname: str
+    trayname: str
     hashid: str
 
 

@@ -88,8 +88,11 @@ def setup_db():
                     continue
                 except NoResultFound:
                     pass
-
-                dbim = Image(blob=buf, name=p, hashid=ha)
+                name = os.path.basename(p)
+                hole_id = name.split('.')[0]
+                dbim = Image(blob=buf, sample='foo', material='sanidine',identifier=1000,
+                             trayname='421-hole', loadname='test148',
+                             hole_id=int(hole_id), hashid=ha)
                 sess.add(dbim)
                 if tag == 'blurry':
                     l = Labels(image=dbim, label_id=6, user_id=1)

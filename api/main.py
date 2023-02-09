@@ -69,11 +69,9 @@ setup_db()
 
 @app.post('/add_unclassified_image')
 async def add_unclassified_image(payload: schemas.UnclassifiedImage, db: Session = Depends(get_db)):
-    img = base64.b64decode(payload.image.encode())
-    name = payload.name
 
-    # img.save(bb, format='tiff')
-    # buf = bb.getvalue()
+    img = base64.b64decode(payload.image.encode())
+
     ha = hashlib.sha256(img).hexdigest()
 
     q = db.query(Image)
@@ -84,7 +82,9 @@ async def add_unclassified_image(payload: schemas.UnclassifiedImage, db: Session
     except NoResultFound:
         pass
 
-    dbim = Image(blob=img, name=name, hashid=ha)
+    payloadargs = payload.dict(exclude=['image'])
+
+    dbim = Image(blob=img, hashid=ha, **payloadargs)
     db.add(dbim)
     db.commit()
 
@@ -120,7 +120,7 @@ def get_representative_images(db: Session = Depends(get_db)):
     for r in records:
         print(r.id)
     obj = [{'label': i.label.name,
-            'name': i.image.name,
+            # 'name': i.image.name,
             'image': base64.b64encode(i.image.blob).decode()} for i in q.all()]
     return JSONResponse(content=obj)
 
@@ -141,9 +141,10 @@ async def get_scoreboard(user: str = None, db: Session = Depends(get_db)):
     rows = sorted(rows, key=lambda x: x['total'], reverse=True)
 
     if user:
-        idx = next((i for i, r in enumerate(rows) if r['name'] == user))
-        row = rows.pop(idx)
-        rows.insert(0, row)
+        idx = next((i for i, r in enumerate(rows) if r['name'] == user), None)
+        if idx is not None:
+            row = rows.pop(idx)
+            rows.insert(0, row)
 
     obj = {'table': rows}
     return JSONResponse(content=obj)

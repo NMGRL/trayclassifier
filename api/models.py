@@ -62,6 +62,16 @@ class Labels(Base):
 
 class Image(Base):
     blob = Column(LargeBinary)
-    name = Column(String)
     hashid = Column(String)
+
+    sample = Column(String)
+    material = Column(String)
+    identifier = Column(String)
+
+    loadname = Column(String)
+    hole_id = Column(Integer)
+    trayname = Column(String)
+
+    create_date = Column(DateTime, server_default=func.now())
+
 # ============= EOF =============================================
