@@ -56,7 +56,13 @@ def make_table(cols, tid):
 
 
 def make_example_col(label):
-    return dbc.Col([html.Div(dbc.Button(label.capitalize(),
+
+    if label == 'good':
+        name = 'SingleGrain'
+    else:
+        name = label.capitalize()
+
+    return dbc.Col([html.Div(dbc.Button(name,
                                         id=f'{label}_btn',
                                         style={'display': 'block',
                                                'margin-left': 'auto',
@@ -133,7 +139,7 @@ dash_app.layout = html.Div(dbc.Container([
                  make_table(cols_count_table,
                             'results_table'),
                  html.Div(id='results_info'),
-                 html.H2('Scoreboard'),
+                 html.H2('Leader Board'),
                  make_table(cols_scoreboard_table,
                             'scoreboard_table')])
              ])]),
