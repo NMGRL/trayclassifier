@@ -65,12 +65,17 @@ class Image(Base):
     hashid = Column(String)
 
     sample = Column(String)
+    project = Column(String)
     material = Column(String)
     identifier = Column(String)
 
     loadname = Column(String)
     hole_id = Column(Integer)
     trayname = Column(String)
+
+    note = Column(String)
+    nxtals = Column(Integer)
+    weight = Column(Float)
 
     create_date = Column(DateTime, server_default=func.now())
 
