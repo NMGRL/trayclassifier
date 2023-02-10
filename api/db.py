@@ -47,7 +47,7 @@ def add_default_user(s):
 
 
 def setup_db():
-    Base.metadata.create_all(bind=engine)
+    # Base.metadata.create_all(bind=engine)
 
     sess = next(get_db())
     add_default_user(sess)

@@ -17,6 +17,7 @@ import base64
 import hashlib
 import io
 import json
+import os
 from typing import List, Optional
 
 from fastapi import FastAPI, Depends, HTTPException, APIRouter, Response
@@ -28,7 +29,6 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
 from api import schemas
-from api.db import setup_db
 from api.models import Label, Image, Labels, User
 from api.session import get_db
 
@@ -64,7 +64,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-setup_db()
+if int(os.environ.get('SETUP_DB', 0)):
+    from api.db import setup_db
+    setup_db()
 
 
 @app.post('/add_unclassified_image')

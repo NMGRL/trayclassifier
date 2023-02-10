@@ -42,8 +42,7 @@ cols_image_table = [{'name': 'Name', 'id': 'name'},
                     {'name': 'Value', 'id': 'value'}]
 baseurl = 'http://api:8000'
 
-resp = requests.get(f'{baseurl}/users')
-users = resp.json()
+
 # LABELS = ('good', 'empty', 'multigrain', 'contaminant', 'blurry')
 LABELS = ('good', 'empty', 'multigrain', 'contaminant')
 
@@ -111,7 +110,8 @@ dash_app.layout = html.Div(dbc.Container([
                                 style={'display': 'inline-block', 'width': '20%'}),
                       html.Datalist(
                           id='available_users',
-                          children=[html.Option(value=word['name']) for word in users])
+                          # children=[html.Option(value=word['name']) for word in users]
+                        )
                       ])),
     # dbc.Row(dbc.ButtonGroup([dbc.Button('Next Image',
     #                                     id='next_image_btn'),
@@ -260,7 +260,8 @@ def make_label_guess(im):
                     Output('contaminant_graph', 'children'),
                     Output('image_table', 'data'),
                     Output('confirm-danger', 'displayed'),
-                    Output('label_guess', 'children')
+                    Output('label_guess', 'children'),
+                    Output('available_users', 'children')
                     ],
                    [
                        Input('good_btn', 'n_clicks'),
@@ -345,11 +346,14 @@ def handle_image(good_n_clicks, skip_n_clicks, empty_n_clicks, multigrain_n_clic
         image_table = image_tabledata
 
     good_graph, empty_graph, multigrain_graph, contaminant_graph = make_example_graphs()
+    resp = requests.get(f'{baseurl}/users')
+    users = resp.json()
+    available_users = [html.Option(value=word['name']) for word in users]
 
     return graph, image_id, \
            tabledata, total_info, unclassified_info, scoreboard_tabledata, \
            good_graph, empty_graph, multigrain_graph, contaminant_graph, \
-           image_table, display_confirm, label_guess
+           image_table, display_confirm, label_guess, available_users
 
 
 app = dash_app.server

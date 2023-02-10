@@ -46,6 +46,10 @@ class User(Base):
     name = Column(String)
 
 
+class Achievement(Base):
+    name = Column(String)
+
+
 class Label(Base):
     name = Column(String)
 
