@@ -54,12 +54,10 @@ def setup_db():
     for l in ('good', 'bad', 'empty', 'multigrain', 'contaminant', 'blurry'):
         add_label(sess, l)
 
-    load_pics = True
-    if load_pics:
+    if int(os.environ.get('LOAD_PICS', 0)):
         for tag in ('blurry', 'empty'):
             root = f'./data/421{tag}'
             for f in os.listdir(root):
-
                 p = os.path.join(root, f)
                 try:
                     img = PILImage.open(p)
@@ -69,7 +67,8 @@ def setup_db():
                     bottom = 100
                     top = height - bottom
                     img = img.crop((left, bottom, right, top))
-                except UnidentifiedImageError:
+                except UnidentifiedImageError as e:
+                    print('UnidentifiedImageError', e)
                     continue
                 #
                 # ha = array(img.convert('L')).flatten().tobytes()
@@ -90,9 +89,14 @@ def setup_db():
                     pass
                 name = os.path.basename(p)
                 hole_id = name.split('.')[0]
-                dbim = Image(blob=buf, sample='foo', material='sanidine',identifier=1000,
-                             trayname='421-hole', loadname='test148',
+                dbim = Image(blob=buf,
+                             sample='foo',
+                             material='sanidine',
+                             identifier=1000,
+                             trayname='421-hole',
+                             loadname='test148',
                              hole_id=int(hole_id), hashid=ha)
+                # print('asdfasdfasd', name, dbim)
                 sess.add(dbim)
                 if tag == 'blurry':
                     l = Labels(image=dbim, label_id=6, user_id=1)

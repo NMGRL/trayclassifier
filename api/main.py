@@ -64,9 +64,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-if int(os.environ.get('SETUP_DB', 0)):
-    from api.db import setup_db
-    setup_db()
+
+from api.db import setup_db
+setup_db()
 
 
 @app.post('/add_unclassified_image')
