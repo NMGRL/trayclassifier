@@ -44,7 +44,8 @@ baseurl = 'http://api:8000'
 
 resp = requests.get(f'{baseurl}/users')
 users = resp.json()
-LABELS = ('good', 'empty', 'multigrain', 'contaminant', 'blurry')
+# LABELS = ('good', 'empty', 'multigrain', 'contaminant', 'blurry')
+LABELS = ('good', 'empty', 'multigrain', 'contaminant')
 
 
 def make_table(cols, tid):
@@ -74,13 +75,17 @@ def make_example_col(label):
                                     }
                              ),
                     html.Div(id=f'{label}_graph')],
-                   width=2)
+                    width=3)
 
 
 def make_example_row():
     cols = [make_example_col(label) for label in LABELS]
     return dbc.Row(cols, className='justify-content-center')
 
+
+countbox_style = {'border': 'solid',
+                  'border-radius': '10px',
+                  }
 
 dash_app.layout = html.Div(dbc.Container([
     dcc.ConfirmDialog(
@@ -90,6 +95,16 @@ dash_app.layout = html.Div(dbc.Container([
     dbc.Row(dbc.Col(html.H1('R-Hole'),
                     className='col-md-auto'),
             className='justify-content-center'),
+    dbc.Row([dbc.Col(html.H3('Images')),
+             dbc.Col(html.Div(html.H3(id='total_info', style={'color': 'green',
+                                                              'margin': '5px'
+                                                              })),
+                     style=countbox_style),
+            dbc.Col(html.Div(html.H3(id='unclassified_info', style={'color': 'orange',
+                                                                    'margin': '5px'
+                                                                    }),
+                             style=countbox_style
+                             ))]),
     dbc.Row(html.Div([html.H4('Username', style={'display': 'inline-block', 'margin-right': 20}),
                       dcc.Input(id='username', type='text', placeholder='',
                                 list='available_users',
@@ -138,7 +153,6 @@ dash_app.layout = html.Div(dbc.Container([
                  html.H2('Results'),
                  make_table(cols_count_table,
                             'results_table'),
-                 html.Div(id='results_info'),
                  html.H2('Leader Board'),
                  make_table(cols_scoreboard_table,
                             'scoreboard_table')])
@@ -174,7 +188,7 @@ def make_example_graphs():
         fig.update_layout(coloraxis_showscale=False,
                           paper_bgcolor='#e3cc9e',
                           margin=dict(l=0, r=0, t=0, b=0),
-                          height=150)
+                          height=200)
         fig.update_xaxes(showticklabels=False)
         fig.update_yaxes(showticklabels=False)
         fig.update_traces(hoverinfo='skip')
@@ -236,14 +250,14 @@ def make_label_guess(im):
 @dash_app.callback([Output('image', 'children'),
                     Output('image_id', 'children'),
                     Output('results_table', 'data'),
-                    Output('results_info', 'children'),
+                    Output('total_info', 'children'),
+                    Output('unclassified_info', 'children'),
                     # Output('image_info', 'children'),
                     Output('scoreboard_table', 'data'),
                     Output('good_graph', 'children'),
                     Output('empty_graph', 'children'),
                     Output('multigrain_graph', 'children'),
                     Output('contaminant_graph', 'children'),
-                    Output('blurry_graph', 'children'),
                     Output('image_table', 'data'),
                     Output('confirm-danger', 'displayed'),
                     Output('label_guess', 'children')
@@ -254,7 +268,6 @@ def make_label_guess(im):
                        Input('empty_btn', 'n_clicks'),
                        Input('multigrain_btn', 'n_clicks'),
                        Input('contaminant_btn', 'n_clicks'),
-                       Input('blurry_btn', 'n_clicks'),
                        State('image_id', 'children'),
                        State('username', 'value'),
                        State('image', 'children'),
@@ -262,7 +275,7 @@ def make_label_guess(im):
                    ],
                    )
 def handle_image(good_n_clicks, skip_n_clicks, empty_n_clicks, multigrain_n_clicks,
-                 contaminant_n_clicks, blurry_n_clicks, current_image_id, username,
+                 contaminant_n_clicks, current_image_id, username,
                  efig, image_tabledata):
     display_confirm = False
     if ctx.triggered_id in ('good_btn', 'empty_btn',
@@ -288,7 +301,9 @@ def handle_image(good_n_clicks, skip_n_clicks, empty_n_clicks, multigrain_n_clic
     resp = requests.get(url)
     scoreboard_tabledata = resp.json()['table']
 
-    results_info = f"Total={report['total']} Unclassified={report['unclassified']}"
+    # results_info = f"Total= {report['total']} Unclassified= {report['unclassified']}"
+    total_info = f"Total= {report['total']}"
+    unclassified_info = f"Unclassified= {report['unclassified']}"
 
     obj = None
     if not display_confirm:
@@ -319,7 +334,7 @@ def handle_image(good_n_clicks, skip_n_clicks, empty_n_clicks, multigrain_n_clic
                           paper_bgcolor='#e3cc9e',
                           # margin=dict(l=20, r=20, t=20, b=20),
                           margin=dict(l=0, r=0, t=0, b=0),
-                          height=550)
+                          height=480)
         fig.update_xaxes(showticklabels=False)
         fig.update_yaxes(showticklabels=False)
         graph.figure = fig
@@ -329,11 +344,11 @@ def handle_image(good_n_clicks, skip_n_clicks, empty_n_clicks, multigrain_n_clic
         graph = efig
         image_table = image_tabledata
 
-    good_graph, empty_graph, multigrain_graph, contaminant_graph, blurry_graph = make_example_graphs()
+    good_graph, empty_graph, multigrain_graph, contaminant_graph = make_example_graphs()
 
     return graph, image_id, \
-           tabledata, results_info, scoreboard_tabledata, \
-           good_graph, empty_graph, multigrain_graph, contaminant_graph, blurry_graph, \
+           tabledata, total_info, unclassified_info, scoreboard_tabledata, \
+           good_graph, empty_graph, multigrain_graph, contaminant_graph, \
            image_table, display_confirm, label_guess
 
 
