@@ -76,6 +76,7 @@ class Image(Base):
     loadname = Column(String)
     hole_id = Column(Integer)
     trayname = Column(String)
+    zoom_level = Column(Float)
 
     note = Column(String)
     nxtals = Column(Integer)
