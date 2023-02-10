@@ -24,14 +24,14 @@ class UnclassifiedImage(BaseModel):
     image: str
     zoom_level: Union[float, int]
 
-    loadname: str = None
-    project: str = None
-    sample: str = None
-    material: str = None
-    identifier: str = None
-    weight: float = None
-    note: str = None
-    nxtals: int = None
+    loadname: Optional[str] = None
+    project: Optional[str] = None
+    sample: Optional[str] = None
+    material: Optional[str] = None
+    identifier: Optional[str] = None
+    weight: Optional[float] = None
+    note: Optional[str] = None
+    nxtals: Optional[int] = None
 
 
 class ORMBase(BaseModel):
