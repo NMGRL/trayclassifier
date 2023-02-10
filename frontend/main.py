@@ -320,6 +320,7 @@ def handle_image(good_n_clicks, skip_n_clicks, empty_n_clicks, multigrain_n_clic
     image_id = 0
 
     label_guess = '---'
+
     if obj:
         image_id = obj['id']
         hid = obj['hashid']
@@ -341,10 +342,12 @@ def handle_image(good_n_clicks, skip_n_clicks, empty_n_clicks, multigrain_n_clic
         graph.figure = fig
         image_table = make_image_table(obj)
         label_guess = make_label_guess(img)
+
     else:
         graph = efig
         image_table = image_tabledata
 
+    label_guess = f"R-Hole's guess:  {label_guess}"
     good_graph, empty_graph, multigrain_graph, contaminant_graph = make_example_graphs()
     resp = requests.get(f'{baseurl}/users')
     users = resp.json()
