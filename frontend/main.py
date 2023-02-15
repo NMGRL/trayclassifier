@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # ===============================================================================
 # Copyright 2023 ross
 #
@@ -37,7 +38,9 @@ dash_app = Dash(
 cols_count_table = [{'name': 'Label', 'id': 'label'},
                     {'name': 'Count', 'id': 'count'}]
 cols_scoreboard_table = [{'name': 'Name', 'id': 'name'},
-                         {'name': 'TotalClassified', 'id': 'total'}]
+                         {'name': 'TotalClassified', 'id': 'total'},
+                         {'name': 'Badges', 'id': 'badges'}]
+
 cols_image_table = [{'name': 'Name', 'id': 'name'},
                     {'name': 'Value', 'id': 'value'}]
 baseurl = 'http://api:8000'

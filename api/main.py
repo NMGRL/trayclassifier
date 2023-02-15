@@ -64,14 +64,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 from api.db import setup_db
+
 setup_db()
 
 
 @app.post('/add_unclassified_image')
 async def add_unclassified_image(payload: schemas.UnclassifiedImage, db: Session = Depends(get_db)):
-
     img = base64.b64decode(payload.image.encode())
 
     ha = hashlib.sha256(img).hexdigest()
@@ -84,7 +83,7 @@ async def add_unclassified_image(payload: schemas.UnclassifiedImage, db: Session
     except NoResultFound:
         pass
 
-    payloadargs = payload.dict(exclude={'image',})
+    payloadargs = payload.dict(exclude={'image', })
 
     dbim = Image(blob=img, hashid=ha, **payloadargs)
     db.add(dbim)
@@ -113,10 +112,10 @@ async def add_label(image_id: str, label: str = 'good', user: str = 'default', d
 def get_representative_images(db: Session = Depends(get_db)):
     # subquery = db.query(Labels.id).order_by(Labels.label_id).distinct(Labels.label_id).subquery()
     # q = db.query(Labels).filter(Labels.id.in_(select(subquery)))
-    subquery = db.query(Labels.id).distinct(Labels.label_id).order_by(Labels.label_id.desc(), Labels.id.desc()).subquery()
+    subquery = db.query(Labels.id).distinct(Labels.label_id).order_by(Labels.label_id.desc(),
+                                                                      Labels.id.desc()).subquery()
 
     q = db.query(Labels).filter(Labels.id.in_(select(subquery))).order_by(Labels.id)
-
 
     records = q.all()
     for r in records:
@@ -132,13 +131,24 @@ async def get_users(db: Session = Depends(get_db)):
     return db.query(User).all()
 
 
+def fetch_badges(user):
+    badges = []
+    if user == 'jake':
+        badges.append('😎')
+    if user == 'MZimmerer':
+        badges.append('🤓')
+    return badges
+
+
 @app.get('/scoreboard')
 async def get_scoreboard(user: str = None, db: Session = Depends(get_db)):
     q = db.query(Labels.user_id, func.count(Labels.user_id))
     q = q.group_by(Labels.user_id)
     records = q.all()
-
-    rows = [{'name': db.query(User).filter(User.id == u).first().name, 'total': c} for u, c in records]
+    names = [db.query(User).filter(User.id == u).first().name for u, c in records]
+    rows = [{'name': ni,
+             'total': c,
+             'badges': fetch_badges(u)} for ni, (u, c) in zip(names, records)]
 
     rows = sorted(rows, key=lambda x: x['total'], reverse=True)
 
