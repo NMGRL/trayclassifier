@@ -42,27 +42,26 @@ cols_image_table = [{'name': 'Name', 'id': 'name'},
                     {'name': 'Value', 'id': 'value'}]
 baseurl = 'http://api:8000'
 
-
 # LABELS = ('good', 'empty', 'multigrain', 'contaminant', 'blurry')
 LABELS = ('good', 'empty', 'multigrain', 'contaminant')
 
 
 def make_table(cols, tid):
     dt = DataTable(columns=cols,
-                   style_data={"fontSize": "12px", "font-family": "verdana"},
-                   style_header={"fontSize": "14px", "font-family": "verdana"},
+                   style_data={"fontSize": "10px", "font-family": "verdana"},
+                   style_header={"fontSize": "12px", "font-family": "verdana"},
                    id=tid)
     return dt
 
 
 def make_example_col(label):
-
     if label == 'good':
         name = 'SingleGrain'
     else:
         name = label.capitalize()
 
-    return dbc.Col([html.Div(dbc.Button(name,
+    return dbc.Col([html.Div(id=f'{label}_graph'),
+                    html.Div(dbc.Button(name,
                                         id=f'{label}_btn',
                                         style={'display': 'block',
                                                'margin-left': 'auto',
@@ -73,8 +72,8 @@ def make_example_col(label):
                                     'margin-bottom': '10px',
                                     }
                              ),
-                    html.Div(id=f'{label}_graph')],
-                    width=3)
+                    ],
+                   width=3)
 
 
 def make_example_row():
@@ -99,11 +98,11 @@ dash_app.layout = html.Div(dbc.Container([
                                                               'margin': '5px'
                                                               })),
                      style=countbox_style),
-            dbc.Col(html.Div(html.H3(id='unclassified_info', style={'color': 'orange',
-                                                                    'margin': '5px'
-                                                                    }),
-                             style=countbox_style
-                             ))]),
+             dbc.Col(html.Div(html.H3(id='unclassified_info', style={'color': 'orange',
+                                                                     'margin': '5px'
+                                                                     }),
+                              style=countbox_style
+                              ))]),
     dbc.Row(html.Div([html.H4('Username', style={'display': 'inline-block', 'margin-right': 20}),
                       dcc.Input(id='username', type='text', placeholder='',
                                 list='available_users',
@@ -111,7 +110,7 @@ dash_app.layout = html.Div(dbc.Container([
                       html.Datalist(
                           id='available_users',
                           # children=[html.Option(value=word['name']) for word in users]
-                        )
+                      )
                       ])),
     # dbc.Row(dbc.ButtonGroup([dbc.Button('Next Image',
     #                                     id='next_image_btn'),
@@ -147,12 +146,12 @@ dash_app.layout = html.Div(dbc.Container([
                                       }),
                       html.Div(id="image"), ]),
              dbc.Col([
-                 html.H2('Image'),
-                 make_table(cols_image_table,
-                            'image_table'),
-                 html.H2('Results'),
-                 make_table(cols_count_table,
-                            'results_table'),
+                 dbc.Row([dbc.Col([html.H2('Image'),
+                          make_table(cols_image_table,
+                                     'image_table')]),
+                          dbc.Col([html.H2('Results'),
+                          make_table(cols_count_table,
+                                     'results_table')])]),
                  html.H2('Leader Board'),
                  make_table(cols_scoreboard_table,
                             'scoreboard_table')])
@@ -354,9 +353,9 @@ def handle_image(good_n_clicks, skip_n_clicks, empty_n_clicks, multigrain_n_clic
     available_users = [html.Option(value=word['name']) for word in users]
 
     return graph, image_id, \
-           tabledata, total_info, unclassified_info, scoreboard_tabledata, \
-           good_graph, empty_graph, multigrain_graph, contaminant_graph, \
-           image_table, display_confirm, label_guess, available_users
+        tabledata, total_info, unclassified_info, scoreboard_tabledata, \
+        good_graph, empty_graph, multigrain_graph, contaminant_graph, \
+        image_table, display_confirm, label_guess, available_users
 
 
 app = dash_app.server
