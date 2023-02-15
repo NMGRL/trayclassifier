@@ -148,7 +148,7 @@ async def get_scoreboard(user: str = None, db: Session = Depends(get_db)):
     names = [db.query(User).filter(User.id == u).first().name for u, c in records]
     rows = [{'name': ni,
              'total': c,
-             'badges': fetch_badges(u)} for ni, (u, c) in zip(names, records)]
+             'badges': fetch_badges(ni)} for ni, (u, c) in zip(names, records)]
 
     rows = sorted(rows, key=lambda x: x['total'], reverse=True)
 
